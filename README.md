@@ -78,8 +78,7 @@ Download the following 3 additional images from the [Prokudin-Gorskii Collection
 3. Save to `code/data/` directory
 4. Rename to `monument.tif`, `woods.tif`, `railtrack.tif`
 
-### 3. Web assets
-Extract `assets.zip` to get the folder with web assets.
+
 ---
 
 ## Usage
