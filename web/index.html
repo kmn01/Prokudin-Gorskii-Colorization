@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorizing the Prokudin-Gorskii Collection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+            color: #333;
+            background: #fafafa;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        h1 {
+            font-size: 2.8em;
+            margin-bottom: 20px;
+            color: #1a252f;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(to right, #3498db, #2ecc71);
+            margin: 15px auto 0;
+            border-radius: 2px;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            color: #7f8c8d;
+            font-style: italic;
+            text-align: center;
+            margin: 8px 0;
+        }
+
+        .subtitle:last-of-type {
+            margin-top: 15px;
+            font-size: 0.95em;
+            color: #95a5a6;
+        }
+
+        h2 {
+            font-size: 1.8em;
+            margin-top: 50px;
+            margin-bottom: 20px;
+            color: #34495e;
+            border-bottom: 1px solid #bdc3c7;
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            font-size: 1.3em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            color: #34495e;
+        }
+
+        h4 {
+            font-size: 1.1em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: #34495e;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        .intro {
+            font-size: 1.05em;
+            line-height: 1.8;
+            margin-bottom: 30px;
+            color: #555;
+        }
+
+        /* Header Gallery Styles */
+        .header-gallery {
+            margin: -20px 0 60px 0;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .header-gallery img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.3s ease, filter 0.3s ease;
+            filter: brightness(0.95);
+        }
+
+        .header-gallery img:hover {
+            transform: scale(1.05);
+            filter: brightness(1);
+            z-index: 1;
+        }
+
+        /* Image Gallery Styles */
+        .image-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .image-container {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+
+        .image-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .image-container img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+            display: block;
+            cursor: pointer;
+        }
+
+        .expand-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(52, 73, 94, 0.8);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: background 0.2s;
+        }
+
+        .expand-btn:hover {
+            background: rgba(52, 73, 94, 1);
+        }
+
+        .image-caption {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+            text-align: center;
+        }
+
+        .offset-info {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            color: #e74c3c;
+            margin-top: 5px;
+        }
+
+        /* Modal/Popup Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            overflow: auto;
+        }
+
+        .modal-content {
+            position: relative;
+            margin: 2% auto;
+            padding: 20px;
+            max-width: 90%;
+            max-height: 90%;
+            text-align: center;
+        }
+
+        .modal-content img {
+            max-width: 100%;
+            max-height: 85vh;
+            object-fit: contain;
+            cursor: zoom-in;
+        }
+
+        .modal-content img.zoomed {
+            cursor: zoom-out;
+            max-width: none;
+            max-height: none;
+            width: auto;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 25px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-modal:hover {
+            color: #bbb;
+        }
+
+        /* Comparison Layout */
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        /* Accordion Styles */
+        .accordion {
+            background-color: #f8f9fa;
+            color: #34495e;
+            cursor: pointer;
+            padding: 15px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 1em;
+            font-family: 'Georgia', serif;
+            transition: 0.3s;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        .accordion:hover {
+            background-color: #e9ecef;
+        }
+
+        .accordion:after {
+            content: '\002B';
+            color: #34495e;
+            font-weight: bold;
+            float: right;
+            margin-left: 5px;
+        }
+
+        .accordion.active:after {
+            content: "\2212";
+        }
+
+        .accordion-panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background-color: white;
+            border-radius: 0 0 4px 4px;
+        }
+
+        .accordion-panel.active {
+            padding: 20px 15px;
+        }
+
+        /* Results table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            font-size: 0.9em;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        th {
+            background: #34495e;
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* Feature box */
+        .feature-box {
+            background: white;
+            border-left: 4px solid #3498db;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-box h3 {
+            margin-top: 0;
+            color: #3498db;
+        }
+
+        /* Alert box */
+        .alert {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .alert h3 {
+            margin-top: 0;
+            color: #155724;
+        }
+
+        footer {
+            margin-top: 80px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+
+            .header-gallery {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .header-gallery img {
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <div class="header-gallery-container">
+            <div class="header-gallery">
+                <img src="assets/pyramid_aligned_monument.jpg" onclick="openModal(this.src)">
+                <img src="assets/pyramid_aligned_emir.jpg" onclick="openModal(this.src)">
+                <img src="assets/pyramid_aligned_lastochikino.jpg" onclick="openModal(this.src)">
+            </div>
+        </div>
+
+        <header>
+            <h1>Colorizing the Prokudin-Gorskii Photo Collection</h1>
+            <p class="subtitle">Automatic Image Alignment and Color Channel Registration</p>
+            <p class="subtitle">Kirthana Natarajan</p>
+        </header>
+
+        <!-- Introduction -->
+        <section id="introduction">
+            <h2>Background</h2>
+            <p class="intro">
+                Sergei Mikhailovich Prokudin-Gorskii (1863-1944) was a pioneering photographer who
+                envisioned color photography and multi-media classrooms long before it was invented.
+                Between 1907 and 1915,
+                he traveled across the Russian Empire capturing thousands
+                of images using a clever technique of recording three exposures of every scene onto glass
+                plates using red, green, and blue filters.
+            </p>
+            <p class="intro">
+                The goal of this project is to automatically align these color channel images to produce
+                a single RGB color photograph with minimal visual artifacts. This requires implementing
+                efficient alignment algorithms that can handle both small JPEG images and large high-resolution
+                TIFF scans.
+            </p>
+        </section>
+
+        <!-- Approach -->
+        <section id="approach">
+            <h2>Approach</h2>
+
+            <h3>Algorithm Overview</h3>
+            <p>
+                The core alignment pipeline consists of:
+            </p>
+            <ul style="margin-left: 30px; margin-bottom: 15px;">
+                <li><strong>Channel extraction:</strong> Splitting the stacked BGR image into separate channels</li>
+                <li><strong>Alignment search:</strong> Finding optimal (x, y) displacement using exhaustive or pyramid
+                    search</li>
+                <li><strong>Quality check:</strong> Automatic fallback to edge-based features if NCC score < 0.7</li>
+                <li><strong>Post-processing:</strong> Border cropping and automatic enhancements</li>
+            </ul>
+
+            <h3>Single-Scale Alignment</h3>
+            <p>
+                For smaller JPEG images, exhaustive search over a [-50, 50] pixel window is computationally
+                feasible.<br>
+                Single-scale alignment is applied full resolution, comparing the reference and target images over
+                a predefined search range. Every possible shift within this range is evaluated to find the best match,
+                using a similarity metric like normalized cross-correlation or euclidean distance. While this approach
+                works for small images, it becomes slow for large images or when large misalignments need to be
+                corrected,
+                since all possible translations must be exhaustively checked.
+            </p>
+
+            <h3>Multi-Scale Pyramid Alignment</h3>
+            <p>
+                For high-resolution TIFF images, a coarse-to-fine pyramid approach dramatically reduces computation
+                time:
+            </p>
+            <ul style="margin-left: 30px; margin-bottom: 15px;">
+                <li>Recursively downsample images by factor of 2</li>
+                <li>Align at coarsest scale with full [-50, 50] search window</li>
+                <li>Scale up displacement by 2× at each level</li>
+                <li>Refine with small +3/-3 pixel search at each finer level</li>
+            </ul>
+
+            <p>Multi-Scale Pyramid Alignment speeds up image alignment by progressively searching at multiple
+                resolutions. The process begins by creating smaller, downsampled versions of the images, which reduces
+                the number of pixels and makes a broad search for large shifts much faster. Once a rough alignment is
+                found at the coarsest level, the estimated shift is scaled up to match the higher-resolution images and
+                used as a starting point for a finer, local search. This recursive approach repeats across levels,
+                gradually refining the alignment while only exploring small neighborhoods at each stage. By combining
+                coarse, low-resolution estimates with fine, high-resolution adjustments, the method efficiently handles
+                large misalignments.</p>
+
+            <h3>Design Decisions and Optimizations</h3>
+
+            <h4>NCC vs L2 Norm</h4>
+            <p>
+                Normalized Cross-Correlation (NCC) performed better than L2 norm (Euclidean distance). NCC compares the
+                patterns of pixel values rather than their absolute brightness. This makes it insensitive to differences
+                in brightness and contrast, which is better since the R, G, and B channels may have different intensity
+                levels due to different spectral sensitivity of the original glass plates.
+            </p>
+
+            <h4>Key Parameters</h4>
+            <ul style="margin-left: 30px; margin-bottom: 15px;">
+                <li><strong>max_shift (50 pixels):</strong> Large enough to handle typical misalignments in high-res
+                    scans</li>
+                <li><strong>max_levels (6):</strong> Balances pyramid depth with computational cost</li>
+                <li><strong>min_size (50 pixels):</strong> Prevents over-downsampling that would lose structural
+                    information</li>
+                <li><strong>refine_range (3 pixels):</strong> Small refinement window sufficient after coarse alignment
+                </li>
+            </ul>
+
+            <h4>Border Cropping Strategy</h4>
+            <p>
+                Two stages of cropping improve alignment quality:
+            </p>
+            <ol style="margin-left: 30px; margin-bottom: 15px;">
+                <li><strong>During alignment:</strong> Cropping 10% from borders during similarity scoring prevents
+                    edge artifacts from <code>np.roll</code> from affecting the metric</li>
+                <li><strong>Final output:</strong> Final 10% crop removes remaining artifacts at the edges</li>
+            </ol>
+
+            <h4>Green as Reference Channel</h4>
+            <p>
+                Instead of aligning to the Blue channel, this implementation uses Green as the
+                reference. The green channel typically has the best/highest signal-to-noise ratio
+                and intermediate sensitivity in the visible spectrum. Blue channels tend to
+                be noisier due to atmospheric scattering. This choice proved especially
+                effective for the Emir image, where blue channel overexposure caused poor alignment when aligned with
+                blue channel as reference.
+            </p>
+
+            <h4>Automatic Edge-Based Fallback</h4>
+            <p>
+                When initial NCC-based alignment produces a score below 0.7, the algorithm automatically retries using
+                Sobel edge features. This hybrid approach handles cases where brightness differences between channels
+                are too severe for intensity-based alignment, while avoiding the computational overhead of edge
+                detection
+                for images that are easier to align. Edge features align based on structural content rather than
+                absolute
+                intensities,
+                making them robust to exposure variations.
+            </p>
+        </section>
+
+        <!-- Single-Scale Results -->
+        <section id="single-scale">
+            <h2>Single-Scale Alignment Results</h2>
+            <p>Results on low-resolution JPEG images using single-scale exhaustive search with NCC metric:</p>
+
+            <div class="image-row">
+                <div class="image-container">
+                    <button class="expand-btn" onclick="openModal('assets/simple_aligned_cathedral.jpg')">⛶</button>
+                    <img src="assets/simple_aligned_cathedral.jpg" alt="Cathedral" onclick="openModal(this.src)">
+                    <div class="image-caption">
+                        <strong>Cathedral</strong><br>
+                        <span class="offset-info">R: (1, 7) • G: (0, 0) • B: (-2, -5)</span>
+                    </div>
+                </div>
+
+                <div class="image-container">
+                    <button class="expand-btn" onclick="openModal('assets/simple_aligned_monastery.jpg')">⛶
+                    </button>
+                    <img src="assets/simple_aligned_monastery.jpg" alt="Monastery" onclick="openModal(this.src)">
+                    <div class="image-caption">
+                        <strong>Monastery</strong><br>
+                        <span class="offset-info">R: (1, 6) • G: (0, 0) • B: (-2, 3)</span>
+                    </div>
+                </div>
+
+                <div class="image-container">
+                    <button class="expand-btn" onclick="openModal('assets/simple_aligned_tobolsk.jpg')">⛶
+                    </button>
+                    <img src="assets/simple_aligned_tobolsk.jpg" alt="Tobolsk" onclick="openModal(this.src)">
+                    <div class="image-caption">
+                        <strong>Tobolsk</strong><br>
+                        <span class="offset-info">R: (1, 4) • G: (0, 0) • B: (-3, -3)</span>
+                    </div>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>Red Offset (x, y)</th>
+                        <th>Green Offset (x, y)</th>
+                        <th>Blue Offset (x, y)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>cathedral.jpg</td>
+                        <td>(1, 7)</td>
+                        <td>(0, 0)</td>
+                        <td>(-2, -5)</td>
+                    </tr>
+                    <tr>
+                        <td>monastery.jpg</td>
+                        <td>(1, 6)</td>
+                        <td>(0, 0)</td>
+                        <td>(-2, 3)</td>
+                    </tr>
+                    <tr>
+                        <td>tobolsk.jpg</td>
+                        <td>(1, 4)</td>
+                        <td>(0, 0)</td>
+                        <td>(-3, -3)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Pyramid Results -->
+        <section id="pyramid">
+            <h2>Multi-Scale Pyramid Alignment Results</h2>
+            <p>Results on all images using pyramid alignment with NCC metric and automatic enhancements:</p>
+
+            <div class="image-row">
+                <div class="image-container">
+                    <button class="expand-btn" onclick="openModal('assets/pyramid_aligned_emir.jpg')">⛶</button>
+                    <img src="assets/pyramid_aligned_emir.jpg" alt="Emir" onclick="openModal(this.src)">
+                    <div class="image-caption">
+                        <strong>Emir</strong><br>
+                        <span class="offset-info">R: (17, -3152) • G: (0, 0) • B: (-24, -49)</span>
+                    </div>
+                </div>
+
+                <div class="image-container">
+                    <button class="expand-btn" onclick="openModal('assets/pyramid_aligned_italil.jpg')">⛶
+                    </button>
+                    <img src="assets/pyramid_aligned_italil.jpg" alt="Italil" onclick="openModal(this.src)">
+                    <div class="image-caption">
+                        <strong>Italil</strong><br>
+                        <span class="offset-info">R: (15, -3192) • G: (0, 0) • B: (-21, -3269)</span>
+                    </div>
+                </div>
+
+                <div class="image-container">
+                    <button class="expand-btn" onclick="openModal('assets/pyramid_aligned_church.jpg')">⛶
+                    </button>
+                    <img src="assets/pyramid_aligned_church.jpg" alt="Church" onclick="openModal(this.src)">
+                    <div class="image-caption">
+                        <strong>Church</strong><br>
+                        <span class="offset-info">R: (-8, -3169) • G: (0, 0) • B: (-4, -3227)</span>
+                    </div>
+                </div>
+
+                <div class="image-container">
+                    <button class="expand-btn" onclick="openModal('assets/pyramid_aligned_three_generations.jpg')">⛶
+                    </button>
+                    <img src="assets/pyramid_aligned_three_generations.jpg" alt="Three Generations"
+                        onclick="openModal(this.src)">
+                    <div class="image-caption">
+                        <strong>Three Generations</strong><br>
+                        <span class="offset-info">R: (-3, -3151) • G: (0, 0) • B: (-14, -53)</span>
+                    </div>
+                </div>
+
+                <div class="image-container">
+                    <button class="expand-btn" onclick="openModal('assets/pyramid_aligned_lugano.jpg')">⛶
+                    </button>
+                    <img src="assets/pyramid_aligned_lugano.jpg" alt="Lugano" onclick="openModal(this.src)">
+                    <div class="image-caption">
+                        <strong>Lugano</strong><br>
+                        <span class="offset-info">R: (-13, -3192) • G: (0, 0) • B: (16, -41)</span>
+                    </div>
+                </div>
+
+                <div class="image-container">
+                    <button class="expand-btn" onclick="openModal('assets/pyramid_aligned_melons.jpg')">⛶
+                    </button>
+                    <img src="assets/pyramid_aligned_melons.jpg" alt="Melons" onclick="openModal(this.src)">
+                    <div class="image-caption">
+                        <strong>Melons</strong><br>
+                        <span class="offset-info">R: (4, -3145) • G: (0, 0) • B: (-10, -82)</span>
+                    </div>
+                </div>
+
+                <div class="image-container">
+                    <button class="expand-btn" onclick="openModal('assets/pyramid_aligned_lastochikino.jpg')">⛶
+                    </button>
+                    <img src="assets/pyramid_aligned_lastochikino.jpg" alt="Lastochikino" onclick="openModal(this.src)">
+                    <div class="image-caption">
+                        <strong>Lastochikino</strong><br>
+                        <span class="offset-info">R: (-7, -3163) • G: (0, 0) • B: (2, -3238)</span>
+                    </div>
+                </div>
+
+                <div class="image-container">
+                    <button class="expand-btn" onclick="openModal('assets/pyramid_aligned_icon.jpg')">⛶</button>
+                    <img src="assets/pyramid_aligned_icon.jpg" alt="Icon" onclick="openModal(this.src)">
+                    <div class="image-caption">
+                        <strong>Icon</strong><br>
+                        <span class="offset-info">R: (5, -3196) • G: (0, 0) • B: (-17, -41)</span>
+                    </div>
+                </div>
+
+                <div class="image-container">
+                    <button class="expand-btn" onclick="openModal('assets/pyramid_aligned_siren.jpg')">⛶</button>
+                    <img src="assets/pyramid_aligned_siren.jpg" alt="Siren" onclick="openModal(this.src)">
+                    <div class="image-caption">
+                        <strong>Siren</strong><br>
+                        <span class="offset-info">R: (-18, -3203) • G: (0, 0) • B: (6, -49)</span>
+                    </div>
+                </div>
+
+                <div class="image-container">
+                    <button class="expand-btn" onclick="openModal('assets/pyramid_aligned_self_portrait.jpg')">⛶
+                    </button>
+                    <img src="assets/pyramid_aligned_self_portrait.jpg" alt="Self Portrait"
+                        onclick="openModal(this.src)">
+                    <div class="image-caption">
+                        <strong>Self Portrait</strong><br>
+                        <span class="offset-info">R: (8, -3153) • G: (0, 0) • B: (-29, -79)</span>
+                    </div>
+                </div>
+
+                <div class="image-container">
+                    <button class="expand-btn" onclick="openModal('assets/pyramid_aligned_harvesters.jpg')">⛶
+                    </button>
+                    <img src="assets/pyramid_aligned_harvesters.jpg" alt="Harvesters" onclick="openModal(this.src)">
+                    <div class="image-caption">
+                        <strong>Harvesters</strong><br>
+                        <span class="offset-info">R: (-3, -3153) • G: (0, 0) • B: (-17, -60)</span>
+                    </div>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Image</th>
+                        <th>Red Offset (x, y)</th>
+                        <th>Green Offset (x, y)</th>
+                        <th>Blue Offset (x, y)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>cathedral.jpg</td>
+                        <td>(1, 7)</td>
+                        <td>(0, 0)</td>
+                        <td>(-2, -5)</td>
+                    </tr>
+                    <tr>
+                        <td>church.tif</td>
+                        <td>(-8, -3169)</td>
+                        <td>(0, 0)</td>
+                        <td>(-4, -3227)</td>
+                    </tr>
+                    <tr>
+                        <td>emir.tif</td>
+                        <td>(17, -3152)</td>
+                        <td>(0, 0)</td>
+                        <td>(-24, -49)</td>
+                    </tr>
+                    <tr>
+                        <td>harvesters.tif</td>
+                        <td>(-3, -3153)</td>
+                        <td>(0, 0)</td>
+                        <td>(-17, -60)</td>
+                    </tr>
+                    <tr>
+                        <td>icon.tif</td>
+                        <td>(5, -3196)</td>
+                        <td>(0, 0)</td>
+                        <td>(-17, -41)</td>
+                    </tr>
+                    <tr>
+                        <td>italil.tif</td>
+                        <td>(15, -3192)</td>
+                        <td>(0, 0)</td>
+                        <td>(-21, -3269)</td>
+                    </tr>
+                    <tr>
+                        <td>lastochikino.tif</td>
+                        <td>(-7, -3163)</td>
+                        <td>(0, 0)</td>
+                        <td>(2, -3238)</td>
+                    </tr>
+                    <tr>
+                        <td>lugano.tif</td>
+                        <td>(-13, -3192)</td>
+                        <td>(0, 0)</td>
+                        <td>(16, -41)</td>
+                    </tr>
+                    <tr>
+                        <td>melons.tif</td>
+                        <td>(4, -3145)</td>
+                        <td>(0, 0)</td>
+                        <td>(-10, -82)</td>
+                    </tr>
+                    <tr>
+                        <td>monastery.jpg</td>
+                        <td>(1, 6)</td>
+                        <td>(0, 0)</td>
+                        <td>(-2, 3)</td>
+                    </tr>
+                    <tr>
+                        <td>monument.tif</td>
+                        <td>(24, -3183)</td>
+                        <td>(0, 0)</td>
+                        <td>(-27, -3268)</td>
+                    </tr>
+                    <tr>
+                        <td>railtrack.tif</td>
+                        <td>(-5, -3195)</td>
+                        <td>(0, 0)</td>
+                        <td>(-5, -52)</td>
+                    </tr>
+                    <tr>
+                        <td>self_portrait.tif</td>
+                        <td>(8, -3153)</td>
+                        <td>(0, 0)</td>
+                        <td>(-29, -79)</td>
+                    </tr>
+                    <tr>
+                        <td>siren.tif</td>
+                        <td>(-18, -3203)</td>
+                        <td>(0, 0)</td>
+                        <td>(6, -49)</td>
+                    </tr>
+                    <tr>
+                        <td>three_generations.tif</td>
+                        <td>(-3, -3151)</td>
+                        <td>(0, 0)</td>
+                        <td>(-14, -53)</td>
+                    </tr>
+                    <tr>
+                        <td>tobolsk.jpg</td>
+                        <td>(1, 4)</td>
+                        <td>(0, 0)</td>
+                        <td>(-3, -3)</td>
+                    </tr>
+                    <tr>
+                        <td>woods.tif</td>
+                        <td>(37, -3176)</td>
+                        <td>(0, 0)</td>
+                        <td>(36, -3274)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Additional Examples -->
+        <section id="additional">
+            <h2>Additional Examples from the Collection</h2>
+            <p>Three additional images selected from the Prokudin-Gorskii collection:</p>
+
+            <div class="image-row">
+                <div class="image-container">
+                    <button class="expand-btn" onclick="openModal('assets/pyramid_aligned_monument.jpg')">⛶
+                    </button>
+                    <img src="assets/pyramid_aligned_monument.jpg" alt="Monument" onclick="openModal(this.src)">
+                    <div class="image-caption">
+                        <strong>Monument</strong><br>
+                        <span class="offset-info">R: (24, -3183) • G: (0, 0) • B: (-27, -3268)</span>
+                    </div>
+                </div>
+
+                <div class="image-container">
+                    <button class="expand-btn" onclick="openModal('assets/pyramid_aligned_woods.jpg')">⛶</button>
+                    <img src="assets/pyramid_aligned_woods.jpg" alt="Woods" onclick="openModal(this.src)">
+                    <div class="image-caption">
+                        <strong>Woods</strong><br>
+                        <span class="offset-info">R: (37, -3176) • G: (0, 0) • B: (36, -3274)</span>
+                    </div>
+                </div>
+
+                <div class="image-container">
+                    <button class="expand-btn" onclick="openModal('assets/pyramid_aligned_railtrack.jpg')">⛶
+                    </button>
+                    <img src="assets/pyramid_aligned_railtrack.jpg" alt="Railtrack" onclick="openModal(this.src)">
+                    <div class="image-caption">
+                        <strong>Railtrack</strong><br>
+                        <span class="offset-info">R: (-5, -3195) • G: (0, 0) • B: (-5, -52)</span>
+                    </div>
+                </div>
+            </div>
+
+            <table class="offset-table">
+                <thead>
+                    <tr>
+                        <td>Monument</td>
+                        <td>(37, -3176)</td>
+                        <td>(0, 0)</td>
+                        <td>(-27, -3268)</td>
+                    </tr>
+
+                    <tr>
+                        <td>Woods</td>
+                        <td>(37, -3176)</td>
+                        <td>(0, 0)</td>
+                        <td>(36, -3274)</td>
+                    </tr>
+
+                    <tr>
+                        <td>Railtrack</td>
+                        <td>(-5, -3195)</td>
+                        <td>(0, 0)</td>
+                        <td>(-5, -52)</td>
+                    </tr>
+                    </tbody>
+            </table>
+
+        </section>
+
+        <!-- Challenges -->
+        <section id="challenges">
+            <h2>Challenges</h2>
+
+            <div class="alert">
+                <h3>Church Image - Green Shadow Artifact Resolution</h3>
+                <p>
+                    Initially, the Church image exhibited visible green shadow artifacts around buildings. This was
+                    caused by insufficient border cropping (5%) that failed to remove the misaligned edge regions
+                    created by the circular shift in <code>np.roll</code>.
+                </p>
+                <p>
+                    <strong>Solution:</strong> Increasing the border crop percentage from 5% to 10% during both
+                    alignment scoring and final output eliminated these artifacts. The comparison below
+                    demonstrates the improvement.
+                </p>
+            </div>
+
+            <div class="comparison">
+                <div class="image-container">
+                    <button class="expand-btn"
+                        onclick="openModal('assets/pyramid_aligned_5pcrop_church.jpg')">⛶</button>
+                    <img src="assets/pyramid_aligned_5pcrop_church.jpg" alt="5% crop" onclick="openModal(this.src)">
+                    <div class="image-caption">Before: 5% border crop - green shadows visible</div>
+                </div>
+                <div class="image-container">
+                    <button class="expand-btn" onclick="openModal('assets/pyramid_aligned_noenhancement_church.jpg')">⛶
+                    </button>
+                    <img src="assets/pyramid_aligned_noenhancement_church.jpg" alt="10% crop"
+                        onclick="openModal(this.src)">
+                    <div class="image-caption">After: 10% border crop - artifacts eliminated</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bells and Whistles -->
+        <section id="bells-whistles">
+            <h2>Bells and Whistles</h2>
+
+            <div class="feature-box">
+                <h3>1. Edge-Based Alignment Features</h3>
+                <p>Edge-based alignment leverages the structural features of an image, such as edges and contours,
+                    rather
+                    than raw pixel intensities to achieve accurate registration. This approach is particularly useful
+                    when the color channels differ significantly in brightness or contrast, making standard
+                    intensity-based alignment unreliable. By focusing on gradients and edges, the method ensures that
+                    key shapes and patterns in the image are properly aligned.</p>
+                <p>
+                    Implemented automatic fallback to edge-based alignment when NCC score indicates poor alignment
+                    (score < 0.7), using Sobel gradient magnitude to align based on structural features rather than
+                        pixel intensities. The Sobel operator identifies regions where the brightness changes suddenly,
+                        indicating edges. This implementation first attempts standard NCC alignment, then checks the
+                        alignment quality. If the score is below threshold, it automatically retries using edge
+                        features. </p>
+            </div>
+
+            <div class="feature-box">
+                <h3>2. Automatic Contrast Enhancement</h3>
+                <p>Contrast refers to the difference in brightness between the light and dark areas of an image. Higher
+                    contrast makes details more distinguishable, while low contrast can make an image appear flat or
+                    washed out. Contrast enhancement techniques are used to improve the visibility of features by
+                    stretching or adjusting the intensity range of the image. This helps bring out subtle details,
+                    making dim or low-contrast images clearer and visually more informative.</p>
+                <p>
+                    After clipping the extreme 1% of values in each color channel to remove outliers, each color channel
+                    is independently normalized to utilize the full [0, 1] dynamic range.
+                </p>
+
+                <div class="comparison">
+                    <div class="image-container">
+                        <button class="expand-btn"
+                            onclick="openModal('assets/pyramid_aligned_noenhancement_cathedral.jpg')">⛶</button>
+                        <img src="assets/pyramid_aligned_noenhancement_cathedral.jpg" alt="Before contrast"
+                            onclick="openModal(this.src)">
+                        <div class="image-caption">Before: No enhancement</div>
+                    </div>
+                    <div class="image-container">
+                        <button class="expand-btn"
+                            onclick="openModal('assets/pyramid_aligned_autocontrast_cathedral.jpg')">⛶</button>
+                        <img src="assets/pyramid_aligned_autocontrast_cathedral.jpg" alt="After contrast"
+                            onclick="openModal(this.src)">
+                        <div class="image-caption">After: Contrast enhancement</div>
+                    </div>
+                </div>
+
+                <button class="accordion">View All Images</button>
+                <div class="accordion-panel">
+                    <div id="all-images-grid-autocontrast" class="image-row"></div>
+                </div>
+            </div>
+
+            <div class="feature-box">
+                <h3>3. Automatic White Balance</h3>
+                <p>White balance is the process of adjusting the colors in an image so that objects that appear white in
+                    real life are rendered as true white in the photo. This corrects for color casts caused by different
+                    lighting conditions, such as sunlight. White balance enhancement
+                    ensures that all colors in the image appear natural and consistent, making the overall scene look
+                    more realistic and visually accurate.</p>
+                <p>
+                    Implemented the White World algorithm, which assumes the brightest 5% of pixels
+                    should be white. This effectively removes color casts and normalizes illumination across channels.
+                </p>
+
+                <div class="comparison">
+                    <div class="image-container">
+                        <button class="expand-btn"
+                            onclick="openModal('assets/pyramid_aligned_noenhancement_cathedral.jpg')">⛶</button>
+                        <img src="assets/pyramid_aligned_noenhancement_cathedral.jpg" alt="Before WB"
+                            onclick="openModal(this.src)">
+                        <div class="image-caption">Before: No enhancement</div>
+                    </div>
+                    <div class="image-container">
+                        <button class="expand-btn"
+                            onclick="openModal('assets/pyramid_aligned_autowhitebalance_cathedral.jpg')">⛶</button>
+                        <img src="assets/pyramid_aligned_autowhitebalance_cathedral.jpg" alt="After WB"
+                            onclick="openModal(this.src)">
+                        <div class="image-caption">After: White balanced</div>
+                    </div>
+                </div>
+
+                <button class="accordion">View All Images</button>
+                <div class="accordion-panel">
+                    <div id="all-images-grid-autowhitebalance" class="image-row"></div>
+                </div>
+            </div>
+
+            <div class="feature-box">
+                <h3>4. Adaptive Color Correction</h3>
+                <p>Color correction is the process of adjusting the colors in an image to achieve a more natural and
+                    visually consistent appearance. Unlike white balance, which primarily removes color casts to ensure
+                    neutral whites, color correction focuses on balancing the overall color distribution across all
+                    channels. It compensates for differences in lighting, sensor characteristics, or historical capture
+                    methods, such as the varying RGB filters used in early photography, so that colors appear true to
+                    life and harmonized across the image.</p>
+                <p>
+                    Applied statistical color normalization that equalizes the mean and standard deviation across all
+                    three color channels. This helps compensate for differences in the original RGB filters used by
+                    Prokudin-Gorskii versus modern color spaces.
+                </p>
+
+                <div class="comparison">
+                    <div class="image-container">
+                        <button class="expand-btn"
+                            onclick="openModal('assets/pyramid_aligned_noenhancement_cathedral.jpg')">⛶</button>
+                        <img src="assets/pyramid_aligned_noenhancement_cathedral.jpg" alt="Before color"
+                            onclick="openModal(this.src)">
+                        <div class="image-caption">Before: No enhancement</div>
+                    </div>
+                    <div class="image-container">
+                        <button class="expand-btn"
+                            onclick="openModal('assets/pyramid_aligned_autocolorcorrection_cathedral.jpg')">⛶
+                        </button>
+                        <img src="assets/pyramid_aligned_autocolorcorrection_cathedral.jpg" alt="After color"
+                            onclick="openModal(this.src)">
+                        <div class="image-caption">After: Color corrected</div>
+                    </div>
+                </div>
+
+                <button class="accordion">View All Images</button>
+                <div class="accordion-panel">
+                    <div id="all-images-grid-autocolorcorrection" class="image-row"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Conclusion -->
+        <section id="conclusion">
+            <h2>Conclusion</h2>
+            <p>
+                This project successfully demonstrates automatic colorization of the Prokudin-Gorskii
+                collection through multi-scale pyramid alignment and single-scale exhaustive search. The pyramid
+                approach provides a
+                massive speedup over naive exhaustive search while maintaining accuracy. All images from the provided
+                dataset were successfully aligned with no failures.
+            </p>
+        </section>
+
+        <footer>
+            <p>COMS4732W: Computer Vision 2 • Spring 2026</p>
+            <p>Colorizing the Prokudin-Gorskii Photo Collection</p>
+        </footer>
+    </div>
+
+    <!-- Modal for expanded images -->
+    <div id="imageModal" class="modal" onclick="closeModal()">
+        <span class="close-modal">&times;</span>
+        <div class="modal-content">
+            <img id="modalImg" onclick="toggleZoom(event)">
+        </div>
+    </div>
+
+    <script>
+        // Modal functionality
+        function openModal(src) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImg');
+            modal.style.display = 'block';
+            modalImg.src = src;
+            modalImg.classList.remove('zoomed');
+        }
+
+        function closeModal() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+
+        function toggleZoom(event) {
+            event.stopPropagation();
+            const img = event.target;
+            img.classList.toggle('zoomed');
+        }
+
+        // Accordion functionality
+        const accordions = document.getElementsByClassName("accordion");
+
+        for (let i = 0; i < accordions.length; i++) {
+            accordions[i].addEventListener("click", function () {
+                this.classList.toggle("active");
+
+                const panel = this.nextElementSibling;
+                panel.classList.toggle("active");
+
+                if (panel.style.maxHeight) {
+                    // close
+                    panel.style.maxHeight = null;
+                } else {
+                    // open
+                    panel.style.maxHeight = panel.scrollHeight + "px";
+
+                    // update height again after images load
+                    const imgs = panel.querySelectorAll("img");
+                    imgs.forEach((img) => {
+                        if (!img.complete) {
+                            img.addEventListener("load", () => {
+                                panel.style.maxHeight = panel.scrollHeight + "px";
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        function updateAccordionHeight(panel) {
+            if (!panel.classList.contains("active")) return;
+            panel.style.maxHeight = panel.scrollHeight + "px";
+        }
+
+
+        // Auto Contrast
+        const autoContrastImages = [
+            { src: "assets/pyramid_aligned_noenhancement_emir.jpg", caption: "Emir - Before" },
+            { src: "assets/pyramid_aligned_autocontrast_emir.jpg", caption: "Emir - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_italil.jpg", caption: "Italil - Before" },
+            { src: "assets/pyramid_aligned_autocontrast_italil.jpg", caption: "Italil - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_monastery.jpg", caption: "Monastery - Before" },
+            { src: "assets/pyramid_aligned_autocontrast_monastery.jpg", caption: "Monastery - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_church.jpg", caption: "Church - Before" },
+            { src: "assets/pyramid_aligned_autocontrast_church.jpg", caption: "Church - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_three_generations.jpg", caption: "Three Generations - Before" },
+            { src: "assets/pyramid_aligned_autocontrast_three_generations.jpg", caption: "Three Generations - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_lugano.jpg", caption: "Lugano - Before" },
+            { src: "assets/pyramid_aligned_autocontrast_lugano.jpg", caption: "Lugano - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_melons.jpg", caption: "Melons - Before" },
+            { src: "assets/pyramid_aligned_autocontrast_melons.jpg", caption: "Melons - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_lastochikino.jpg", caption: "Lastochikino - Before" },
+            { src: "assets/pyramid_aligned_autocontrast_lastochikino.jpg", caption: "Lastochikino - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_tobolsk.jpg", caption: "Tobolsk - Before" },
+            { src: "assets/pyramid_aligned_autocontrast_tobolsk.jpg", caption: "Tobolsk - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_icon.jpg", caption: "Icon - Before" },
+            { src: "assets/pyramid_aligned_autocontrast_icon.jpg", caption: "Icon - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_cathedral.jpg", caption: "Cathedral - Before" },
+            { src: "assets/pyramid_aligned_autocontrast_cathedral.jpg", caption: "Cathedral - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_monument.jpg", caption: "Monument - Before" },
+            { src: "assets/pyramid_aligned_autocontrast_monument.jpg", caption: "Monument - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_siren.jpg", caption: "Siren - Before" },
+            { src: "assets/pyramid_aligned_autocontrast_siren.jpg", caption: "Siren - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_woods.jpg", caption: "Woods - Before" },
+            { src: "assets/pyramid_aligned_autocontrast_woods.jpg", caption: "Woods - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_self_portrait.jpg", caption: "Self Portrait - Before" },
+            { src: "assets/pyramid_aligned_autocontrast_self_portrait.jpg", caption: "Self Portrait - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_harvesters.jpg", caption: "Harvesters - Before" },
+            { src: "assets/pyramid_aligned_autocontrast_harvesters.jpg", caption: "Harvesters - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_railtrack.jpg", caption: "Railtrack - Before" },
+            { src: "assets/pyramid_aligned_autocontrast_railtrack.jpg", caption: "Railtrack - After" },
+        ];
+
+
+        const gridAutoContrast = document.getElementById("all-images-grid-autocontrast");
+
+        autoContrastImages.forEach((item) => {
+            const div = document.createElement("div");
+            div.className = "image-container";
+
+            div.innerHTML = `
+                <img src="${item.src}" onclick="openModal(this.src)">
+                <div class="image-caption">${item.caption}</div>
+            `;
+
+            gridAutoContrast.appendChild(div);
+        });
+
+
+        // Auto White Balance
+        const autoWhiteBalanceImages = [
+            { src: "assets/pyramid_aligned_noenhancement_cathedral.jpg", caption: "Cathedral - Before" },
+            { src: "assets/pyramid_aligned_autowhitebalance_cathedral.jpg", caption: "Cathedral - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_monastery.jpg", caption: "Monastery - Before" },
+            { src: "assets/pyramid_aligned_autowhitebalance_monastery.jpg", caption: "Monastery - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_tobolsk.jpg", caption: "Tobolsk - Before" },
+            { src: "assets/pyramid_aligned_autowhitebalance_tobolsk.jpg", caption: "Tobolsk - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_emir.jpg", caption: "Emir - Before" },
+            { src: "assets/pyramid_aligned_autowhitebalance_emir.jpg", caption: "Emir - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_church.jpg", caption: "Church - Before" },
+            { src: "assets/pyramid_aligned_autowhitebalance_church.jpg", caption: "Church - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_three_generations.jpg", caption: "Three Generations - Before" },
+            { src: "assets/pyramid_aligned_autowhitebalance_three_generations.jpg", caption: "Three Generations - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_lugano.jpg", caption: "Lugano - Before" },
+            { src: "assets/pyramid_aligned_autowhitebalance_lugano.jpg", caption: "Lugano - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_melons.jpg", caption: "Melons - Before" },
+            { src: "assets/pyramid_aligned_autowhitebalance_melons.jpg", caption: "Melons - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_lastochikino.jpg", caption: "Lastochikino - Before" },
+            { src: "assets/pyramid_aligned_autowhitebalance_lastochikino.jpg", caption: "Lastochikino - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_icon.jpg", caption: "Icon - Before" },
+            { src: "assets/pyramid_aligned_autowhitebalance_icon.jpg", caption: "Icon - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_siren.jpg", caption: "Siren - Before" },
+            { src: "assets/pyramid_aligned_autowhitebalance_siren.jpg", caption: "Siren - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_self_portrait.jpg", caption: "Self Portrait - Before" },
+            { src: "assets/pyramid_aligned_autowhitebalance_self_portrait.jpg", caption: "Self Portrait - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_harvesters.jpg", caption: "Harvesters - Before" },
+            { src: "assets/pyramid_aligned_autowhitebalance_harvesters.jpg", caption: "Harvesters - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_italil.jpg", caption: "Italil - Before" },
+            { src: "assets/pyramid_aligned_autowhitebalance_italil.jpg", caption: "Italil - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_monument.jpg", caption: "Monument - Before" },
+            { src: "assets/pyramid_aligned_autowhitebalance_monument.jpg", caption: "Monument - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_woods.jpg", caption: "Woods - Before" },
+            { src: "assets/pyramid_aligned_autowhitebalance_woods.jpg", caption: "Woods - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_railtrack.jpg", caption: "Railtrack - Before" },
+            { src: "assets/pyramid_aligned_autowhitebalance_railtrack.jpg", caption: "Railtrack - After" },
+        ];
+
+
+        const gridAutoWhiteBalance = document.getElementById("all-images-grid-autowhitebalance");
+
+        autoWhiteBalanceImages.forEach((item) => {
+            const div = document.createElement("div");
+            div.className = "image-container";
+
+            div.innerHTML = `
+                <img src="${item.src}" onclick="openModal(this.src)">
+                <div class="image-caption">${item.caption}</div>
+            `;
+
+            gridAutoWhiteBalance.appendChild(div);
+        });
+
+
+        // Auto Color Correction
+        const autoColorCorrectionImages = [
+            { src: "assets/pyramid_aligned_noenhancement_cathedral.jpg", caption: "Cathedral - Before" },
+            { src: "assets/pyramid_aligned_autocolorcorrection_cathedral.jpg", caption: "Cathedral - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_monastery.jpg", caption: "Monastery - Before" },
+            { src: "assets/pyramid_aligned_autocolorcorrection_monastery.jpg", caption: "Monastery - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_tobolsk.jpg", caption: "Tobolsk - Before" },
+            { src: "assets/pyramid_aligned_autocolorcorrection_tobolsk.jpg", caption: "Tobolsk - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_emir.jpg", caption: "Emir - Before" },
+            { src: "assets/pyramid_aligned_autocolorcorrection_emir.jpg", caption: "Emir - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_church.jpg", caption: "Church - Before" },
+            { src: "assets/pyramid_aligned_autocolorcorrection_church.jpg", caption: "Church - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_three_generations.jpg", caption: "Three Generations - Before" },
+            { src: "assets/pyramid_aligned_autocolorcorrection_three_generations.jpg", caption: "Three Generations - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_lugano.jpg", caption: "Lugano - Before" },
+            { src: "assets/pyramid_aligned_autocolorcorrection_lugano.jpg", caption: "Lugano - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_melons.jpg", caption: "Melons - Before" },
+            { src: "assets/pyramid_aligned_autocolorcorrection_melons.jpg", caption: "Melons - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_lastochikino.jpg", caption: "Lastochikino - Before" },
+            { src: "assets/pyramid_aligned_autocolorcorrection_lastochikino.jpg", caption: "Lastochikino - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_icon.jpg", caption: "Icon - Before" },
+            { src: "assets/pyramid_aligned_autocolorcorrection_icon.jpg", caption: "Icon - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_siren.jpg", caption: "Siren - Before" },
+            { src: "assets/pyramid_aligned_autocolorcorrection_siren.jpg", caption: "Siren - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_self_portrait.jpg", caption: "Self Portrait - Before" },
+            { src: "assets/pyramid_aligned_autocolorcorrection_self_portrait.jpg", caption: "Self Portrait - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_harvesters.jpg", caption: "Harvesters - Before" },
+            { src: "assets/pyramid_aligned_autocolorcorrection_harvesters.jpg", caption: "Harvesters - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_italil.jpg", caption: "Italil - Before" },
+            { src: "assets/pyramid_aligned_autocolorcorrection_italil.jpg", caption: "Italil - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_monument.jpg", caption: "Monument - Before" },
+            { src: "assets/pyramid_aligned_autocolorcorrection_monument.jpg", caption: "Monument - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_woods.jpg", caption: "Woods - Before" },
+            { src: "assets/pyramid_aligned_autocolorcorrection_woods.jpg", caption: "Woods - After" },
+
+            { src: "assets/pyramid_aligned_noenhancement_railtrack.jpg", caption: "Railtrack - Before" },
+            { src: "assets/pyramid_aligned_autocolorcorrection_railtrack.jpg", caption: "Railtrack - After" },
+        ];
+
+
+        const gridAutoColorCorrection = document.getElementById("all-images-grid-autocolorcorrection");
+
+        autoColorCorrectionImages.forEach((item) => {
+            const div = document.createElement("div");
+            div.className = "image-container";
+
+            div.innerHTML = `
+                <img src="${item.src}" onclick="openModal(this.src)">
+                <div class="image-caption">${item.caption}</div>
+            `;
+            gridAutoColorCorrection.appendChild(div);
+        });
+
+
+    </script>
+</body>
+
+</html>
